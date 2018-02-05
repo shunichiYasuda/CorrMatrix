@@ -115,14 +115,25 @@ public class CorrMatController {
 			int pos = 0;
 			for(String s : fieldNameArray) {
 				if (s.equals((String) c.getValue())) {
-					log.appendText("\n" + pos + ":" + s + "\t" + (String) c.getValue());
+					log.appendText("\ncol[" + pos + "]:\t" + (String) c.getValue());
 					vPosList.add(pos);
 				}
 				pos++;
 			}
 		}// end of 列変数のセット
 		//行変数名のセットが必要
-		
+		List<Integer> hPosList = new ArrayList<Integer>();
+		for(ComboBox c: rowComboArray) {
+			int pos = 0;
+			for(String s: fieldNameArray) {
+				if (s.equals((String) c.getValue())) {
+					log.appendText("\nrow[" + pos + "]:\t" + (String) c.getValue());
+					hPosList.add(pos);
+				}
+				pos++;
+			}
+		}
+		//セットされた変数名を ListView に反映させること。
 
 	}//end of execAction()
 
