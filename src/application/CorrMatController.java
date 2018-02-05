@@ -90,6 +90,7 @@ public class CorrMatController {
 				}
 				dataList.add(new CData(tmpData));
 			}
+			
 			br.close();
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -120,6 +121,7 @@ public class CorrMatController {
 				pos++;
 			}
 		}// end of 列変数のセット
+		//行変数名のセットが必要
 		
 
 	}//end of execAction()
