@@ -110,31 +110,33 @@ public class CorrMatController {
 		// 相関係数を計算するべきフィールド番号をいれておく
 		List<Integer> vPosList = new ArrayList<Integer>();
 		// ComoboBox リストに設定されたフィールド名を取得する
-		for (ComboBox c : colComboArray) {
+		for (ComboBox<String> c : colComboArray) {
 			// fieldNameArray と比較して位置を返す
 			int pos = 0;
 			for(String s : fieldNameArray) {
 				if (s.equals((String) c.getValue())) {
 					log.appendText("\ncol[" + pos + "]:\t" + (String) c.getValue());
 					vPosList.add(pos);
+					colFieldList.getItems().add(s);
 				}
 				pos++;
 			}
 		}// end of 列変数のセット
 		//行変数名のセットが必要
 		List<Integer> hPosList = new ArrayList<Integer>();
-		for(ComboBox c: rowComboArray) {
+		for(ComboBox<String> c: rowComboArray) {
 			int pos = 0;
 			for(String s: fieldNameArray) {
 				if (s.equals((String) c.getValue())) {
 					log.appendText("\nrow[" + pos + "]:\t" + (String) c.getValue());
 					hPosList.add(pos);
+					rowFieldList.getItems().add(s);
 				}
 				pos++;
 			}
 		}
-		//セットされた変数名を ListView に反映させること。
-
+		
+		
 	}//end of execAction()
 
 	@FXML
