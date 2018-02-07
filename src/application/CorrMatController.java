@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
@@ -23,10 +24,12 @@ public class CorrMatController {
 	String[] fieldNameArray;
 	// データのリストをつくる。フィールド分のCData インスタンスを保持する
 	List<CData> dataList = new ArrayList<CData>();
+	//相関係数行列表示のために、行データ、相関係数1、相関係数2,...のクラスが必要
+	List<CCorr> corrList = new ArrayList<CCorr>();
 	@FXML
 	TextArea log;
 	@FXML
-	TableView<String> corrMatrix;
+	TableView<CCorr> corrMatrix;
 	@FXML
 	ListView<String> colFieldList;
 	@FXML
@@ -62,6 +65,8 @@ public class CorrMatController {
 			log.appendText("\nフィールド長 = " + fieldNameArray.length);
 			// ComboBox 配列にフィールド名を入れて選択可能にする
 			for (ComboBox<String> c : colComboArray) {
+				//選択肢の最初に空白を入れておく
+				c.getItems().add(null);
 				for (String s : fieldNameArray) {
 					c.getItems().add(s);
 				}
@@ -162,7 +167,24 @@ public class CorrMatController {
 				log.appendText("\tcorr["+i+"]["+j +"] = "+corr[i][j]);
 			}
 		}
-		//
+		//相関係数行列を TableView に表示するためにもう一工夫。
+		//TableView に表示する TableColumnは変数の選択によって数が異なる。
+		//さらに初期値として変数名を各TableColumn の先頭にいれるし、最初の列は CCorr リストのvarNameが並ぶ
+		//最初の列
+		TableColumn<CCorr,String>  first = new TableColumn<CCorr,String>("var name");
+		corrMatrix.getColumns().add(first);
+		for(Integer n:vPosList) {
+			int pos = (int)n;
+			String name = fieldNameArray[pos];
+			TableColumn<CCorr,String> c = new TableColumn<CCorr,String>(name);
+			corrMatrix.getColumns().add(c);
+		}
+		//CCorr クラスリストを作成する
+		//ここで分かっているのは行変数名、列変数名の番号なので、番号からフィールド名を引いてCCorr をセット
+		//まずは行変数名
+		
+		//列を追加できるかどうか
+		
 	}// end of execAction()
 	//
 	
@@ -214,9 +236,9 @@ public class CorrMatController {
 		}// end of for(int i=0 ...
 		//
 		System.out.println("after cleaninig....");
-		System.out.println("col size ="+colDataList.size()+"\trow size ="+rowDataList.size());
+		System.out.println("row size ="+rowDataList.size()+"\tcol size ="+rowDataList.size());
 		for(int i=0; i<colDataList.size();i++) {
-			System.out.println((int)colDataList.get(i)+ ","+(int)rowDataList.get(i));
+			System.out.println((int)rowDataList.get(i)+ ","+(int)colDataList.get(i));
 		}
 		//相関係数の計算
 		//なんにせよ、平均、分散、共分散のメソッドを使うので double配列の方がよい。
