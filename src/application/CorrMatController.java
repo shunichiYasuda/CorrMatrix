@@ -139,6 +139,10 @@ public class CorrMatController {
 		// 次に、vPosList に入っている番号のそれぞれに hPosList に入っている番号を順番に対応させる。
 		// とりあえず、ペアを確認してみる
 		int vPos, hPos;
+		//相関係数表がはいる double配列を作っておく
+		double[][] corr = new double[hPosList.size()][vPosList.size()];
+		int indexRow = 0;
+		int indexCol = 0;
 		for (Integer v : vPosList) {
 			vPos = v.intValue();
 			for (Integer h : hPosList) {
@@ -147,51 +151,131 @@ public class CorrMatController {
 				// ペアになった番号から、そのフィールドのデータを読み込むのだが、どちらかのデータが空白であったり、
 				// 排除コードであったりした場合にデータを「つめる」必要がある。
 				// これはかなりやっかいなので別メソッドにする
-				dataCleaning(vPos, hPos);
+				//ここで相関係数を計算していた方がわかりやすいので、data cleaning を含めて計算メソッドを作る
+				corr[indexRow][indexCol] = calcCorr(hPos,vPos);
+			}
+		}
+		//check
+		for(int i=0;i<corr.length;i++) {
+			log.appendText("\n");
+			for(int j=0;j<corr[0].length;j++) {
+				log.appendText("\tcorr["+i+"]["+j +"] = "+corr[i][j]);
 			}
 		}
 		//
 	}// end of execAction()
-
+	//
+	
 	// データクリーニング
-	private void dataCleaning(int v, int h) {
+	private double calcCorr(int v, int h) {
+		double r = 0.0;
 		// dataList を壊さないようにデータを外に取り出す。
 		String[] colOriginalDataStrArray = dataList.get(v).get();
 		String[] rowOriginalDataStrArray = dataList.get(h).get();
-		//本当はTextField から除外番号を読み取るが、いまはここで与える
-		String[] eliminate = {"99","9",""};
-		//冗長にはなるが、いったん排除文字を含めて、長さを合わせておく。
+		// 本当はTextField から除外番号を読み取るが、いまはここで与える
+		String[] eliminate = { "99", "9", "" };
+		// 冗長にはなるが、いったん排除文字を含めて、長さを合わせておく。
 		int arraySize = colOriginalDataStrArray.length;
-		if(rowOriginalDataStrArray.length < arraySize) {
+		if (rowOriginalDataStrArray.length < arraySize) {
 			arraySize = rowOriginalDataStrArray.length;
 		}
-		//短い方にあわせて、いったん配列を作っておく
+		// 短い方にあわせて、いったん配列を作っておく
 		String[] colTmpDataArray = new String[arraySize];
 		String[] rowTmpDataArray = new String[arraySize];
-		//データを頭から詰める。つまり長さが合わなければ短い方に合わせる
-		for(int i=0;i<arraySize;i++) {
+		// データを頭から詰める。つまり長さが合わなければ短い方に合わせる
+		for (int i = 0; i < arraySize; i++) {
 			colTmpDataArray[i] = colOriginalDataStrArray[i];
 			rowTmpDataArray[i] = rowOriginalDataStrArray[i];
 		}
-		//両方を頭からチェックしていき排除文字があったらつめるのだけれど
-		//どちらかにあれば、両方のその場所を詰めなければならないので配列で扱うには
-		//やっかいなので、Listを使う
-		// check
-		for (String s : colOriginalDataStrArray) {
-			//文字をチェック
-			if (checkChar(s,eliminate)) {
-				System.out.print("空白");
-			} else {
-				System.out.print("\t" + s);
+		// 両方を頭からチェックしていき排除文字があったらつめるのだけれど
+		// どちらかにあれば、両方のその場所を詰めなければならないので配列で扱うには
+		// やっかいなので、Listを使う
+		// 家での修正がレポジトリにあがっていないので、branchをつくってみた
+		List<Integer> colDataList = new ArrayList<Integer>();
+		List<Integer> rowDataList = new ArrayList<Integer>();
+		for (int i = 0; i < arraySize; i++) {
+			String colTmpStr = colTmpDataArray[i];
+			String rowTmpStr = rowTmpDataArray[i];
+			boolean checkFlag = true;
+			if (checkChar(colTmpStr, eliminate))
+				checkFlag = false;
+			if (checkChar(rowTmpStr, eliminate))
+				checkFlag = false;
+			try {
+				int tmpColData = Integer.parseInt(colTmpStr);
+				int tmpRowData = Integer.parseInt(rowTmpStr);
+			} catch (NumberFormatException e) {
+				checkFlag = false;
 			}
+			if(checkFlag) {
+				colDataList.add(Integer.parseInt(colTmpStr));
+				rowDataList.add(Integer.parseInt(rowTmpStr));
+			}
+		}// end of for(int i=0 ...
+		//
+		System.out.println("after cleaninig....");
+		System.out.println("col size ="+colDataList.size()+"\trow size ="+rowDataList.size());
+		for(int i=0; i<colDataList.size();i++) {
+			System.out.println((int)colDataList.get(i)+ ","+(int)rowDataList.get(i));
 		}
-		System.out.println();
+		//相関係数の計算
+		//なんにせよ、平均、分散、共分散のメソッドを使うので double配列の方がよい。
+		int dataNum = colDataList.size();
+		double[] x = new double[dataNum];
+		double[] y = new double[dataNum];
+		for(int i=0;i<dataNum;i++) {
+			x[i] = (double)rowDataList.get(i);
+			y[i] = (double) colDataList.get(i);
+		}
+		r = corr(x,y);
+		
+		return r;
+	}// end of calcCorr()
+
+	private double corr(double[] x, double[] y) {
+		double c = 0.0;
+		c = corrVariance(x,y) / (stdDev(x)*stdDev(y));
+		return c;
 	}
-	//除外文字かどうかの判断。除外文字なら true
+	private double stdDev(double[] x) {
+		return Math.sqrt(dev(x));
+	}
+	private double corrVariance(double[] x, double[] y) {
+		double c = 0.0;
+		double aveX = ave(x);
+		double aveY = ave(y);
+		double sum = 0.0;
+		for(int i=0;i<x.length;i++) {
+			sum += (x[i] - aveX)*(y[i]- aveY);
+		}
+		c = sum/x.length;
+		return c;
+	}
+	private double dev(double[] x) {
+		double d = 0.0;
+		double sum = 0.0;
+		double a = ave(x);
+		for(double v : x) {
+			sum += (v - a)*(v-a);
+		}
+		d = sum/x.length;
+		return d;
+	}
+	private double ave(double[] x) {
+		double a = 0.0;
+		double sum = 0.0;
+		for(double c: x) {
+			sum += c;
+		}
+		a = sum/x.length;
+		return a;
+	}
+	// 除外文字かどうかの判断。除外文字なら true
 	private boolean checkChar(String in, String[] e) {
 		boolean r = false;
-		for(String s: e) {
-			if(in.equals(s)) r = true;
+		for (String s : e) {
+			if (in.equals(s))
+				r = true;
 		}
 		return r;
 	}
