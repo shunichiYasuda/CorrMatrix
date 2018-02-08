@@ -9,6 +9,8 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+
+import javafx.beans.property.DoubleProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
@@ -114,7 +116,7 @@ public class CorrMatController {
 	@FXML
 	private void execAction() {
 		// 相関係数を計算するべきフィールド番号をいれておく
-		List<Integer> vPosList = new ArrayList<Integer>();
+		List<Integer> colPosList = new ArrayList<Integer>();
 		// 変数リストのクリア
 		colFieldList.getItems().clear();
 		// ComoboBox リストに設定されたフィールド名を取得する
@@ -124,7 +126,7 @@ public class CorrMatController {
 			for (String s : fieldNameArray) {
 				if (s.equals((String) c.getValue())) {
 					log.appendText("\ncol[" + pos + "]:\t" + (String) c.getValue());
-					vPosList.add(pos);
+					colPosList.add(pos);
 					colFieldList.getItems().add(s);
 				}
 				pos++;
@@ -133,13 +135,13 @@ public class CorrMatController {
 			// 変数リストのクリア
 		rowFieldList.getItems().clear();
 		// 行変数名のセットが必要
-		List<Integer> hPosList = new ArrayList<Integer>();
+		List<Integer> rowPosList = new ArrayList<Integer>();
 		for (ComboBox<String> c : rowComboArray) {
 			int pos = 0;
 			for (String s : fieldNameArray) {
 				if (s.equals((String) c.getValue())) {
 					log.appendText("\nrow[" + pos + "]:\t" + (String) c.getValue());
-					hPosList.add(pos);
+					rowPosList.add(pos);
 					rowFieldList.getItems().add(s);
 				}
 				pos++;
@@ -148,22 +150,24 @@ public class CorrMatController {
 		// ここまでで、vPosList と hPosList に対象となるフィールド番号が入っている。
 		// 次に、vPosList に入っている番号のそれぞれに hPosList に入っている番号を順番に対応させる。
 		// とりあえず、ペアを確認してみる
-		int vPos, hPos;
+		int colPos, rowPos;
 		// 相関係数表がはいる double配列を作っておく
-		double[][] corr = new double[hPosList.size()][vPosList.size()];
-		int indexRow = 0;
+		double[][] corr = new double[rowPosList.size()][colPosList.size()];
 		int indexCol = 0;
-		for (Integer v : vPosList) {
-			vPos = v.intValue();
-			for (Integer h : hPosList) {
-				hPos = h.intValue();
-				System.out.println("(" + vPos + "," + hPos + ")");
+		for (Integer v : colPosList) {
+			int indexRow = 0;
+			colPos = v.intValue();
+			for (Integer h : rowPosList) {
+				rowPos = h.intValue();
+				System.out.println("(" + rowPos + "," + colPos + ")");
 				// ペアになった番号から、そのフィールドのデータを読み込むのだが、どちらかのデータが空白であったり、
 				// 排除コードであったりした場合にデータを「つめる」必要がある。
 				// これはかなりやっかいなので別メソッドにする
 				// ここで相関係数を計算していた方がわかりやすいので、data cleaning を含めて計算メソッドを作る
-				corr[indexRow][indexCol] = calcCorr(hPos, vPos);
+				corr[indexRow][indexCol] = calcCorr(rowPos, colPos);
+				indexRow++;
 			}
+			indexCol++;
 		}
 		// check
 		for (int i = 0; i < corr.length; i++) {
@@ -185,7 +189,7 @@ public class CorrMatController {
 		List<CCorr> corrList = new ArrayList<CCorr>();
 		// 行変数名と corr 各行のデータ
 		int index = 0;
-		for (Integer n : hPosList) {
+		for (Integer n : rowPosList) {
 			int pos = (int) n;
 			String name = fieldNameArray[pos];
 			corrList.add(new CCorr(name, corr[index]));
@@ -193,8 +197,10 @@ public class CorrMatController {
 		}
 		// corrList の中身
 		for (CCorr c : corrList) {
-			log.appendText("\n" + c.varNameProperty() + ":");
-			
+			log.appendText("\n" + c.varNameProperty().toString() + ":");
+			for(DoubleProperty d:c.corrProperty()) {
+				log.appendText("\t"+d.doubleValue());
+			}
 		}
 		// 最初の列
 		TableColumn<CCorr, String> first = new TableColumn<CCorr, String>("var name");
@@ -202,7 +208,7 @@ public class CorrMatController {
 		corrMatrix.getColumns().add(first);
 		// 以降の列は選択した変数の数によって異なる
 		// つづいて、corr の各行を CCorr インスタンスにセット
-		for (Integer n : vPosList) {
+		for (Integer n : colPosList) {
 			int pos = (int) n;
 			String name = fieldNameArray[pos];
 			TableColumn<CCorr, String> c = new TableColumn<CCorr, String>(name);
