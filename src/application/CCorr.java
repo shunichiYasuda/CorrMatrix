@@ -1,4 +1,10 @@
 package application;
+
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+
 /**
  * 
  * @author yasuda
@@ -6,19 +12,22 @@ package application;
  */
 public class CCorr {
 	//TableView には「行変数」ごとに表示するので、変数名が最初にくる
-	String varName;
+	StringProperty varName;
 	//対象変数と、列変数とのあいだの相関係数
-	double[] corr;
+	DoubleProperty[] corr;
 	//
 	public CCorr(String str, double[] data) {
-		this.varName = str;
-		this.corr = data;
+		this.varName= new SimpleStringProperty(str);
+		this.corr = new DoubleProperty[data.length];
+		for(int i=0;i<data.length;i++) {
+			this.corr[i] = new SimpleDoubleProperty(data[i]);
+		}
 	}
 	//
-	public String getName() {
+	public StringProperty varNameProperty() {
 		return this.varName;
 	}
-	public double[] getCorr() {
+	public DoubleProperty[] corrProperty() {
 		return this.corr;
 	}
 }
