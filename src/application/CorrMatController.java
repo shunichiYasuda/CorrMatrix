@@ -11,16 +11,22 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
+import javafx.util.Callback;
 
 public class CorrMatController {
 	File dataFile;
@@ -179,7 +185,9 @@ public class CorrMatController {
 		// 相関係数行列を TableView に表示するためにもう一工夫。
 		// TableView に表示する TableColumnは変数の選択によって数が異なる。
 		// さらに初期値として変数名を各TableColumn の先頭にいれるし、最初の列は CCorr リストのvarNameが並ぶ
-
+		// TableColumn の数が実行時に変化するので、これをどうするかが問題。
+		//TableColumn が固定されていれば、データモデルのフィールドに合わせて CellFactory を使えばよいのだが
+		//ここではそうは行かない。
 		// 列方向の変数の数は corr の列数なので、ここでカウントしておく
 		int vVarNum = corr[0].length;
 		// CCorr クラスリストを作成する
@@ -202,19 +210,43 @@ public class CorrMatController {
 				log.appendText("\t"+d.doubleValue());
 			}
 		}
+		//corrList をObservableList にしてみる
+		ObservableList<CCorr> obCorr = FXCollections.observableList(corrList);
 		// 最初の列
 		TableColumn<CCorr, String> first = new TableColumn<CCorr, String>("var name");
 		first.setCellValueFactory(new PropertyValueFactory<CCorr,String>("varName"));
-		corrMatrix.getColumns().add(first);
 		// 以降の列は選択した変数の数によって異なる
-		// つづいて、corr の各行を CCorr インスタンスにセット
+		// 第1列以外をListにしてみる
+		List<TableColumn> columnList = new ArrayList<TableColumn>();
 		for (Integer n : colPosList) {
 			int pos = (int) n;
 			String name = fieldNameArray[pos];
-			TableColumn<CCorr, String> c = new TableColumn<CCorr, String>(name);
+			columnList.add(new TableColumn<CCorr, String>(name));
+			//corrMatrix.getColumns().add(c);
+		}
+		//第2列以降はフィールド名が入った状態で、空。そこに値をセットするが、 PropertyValueFactoryは使えない
+		//そもそもTableView のcolumnにおけるcellの考え方自体が、「データモデルの一つの要素に対応する」となっているようなので、
+		//配列の値をそれぞれ別の列に表示することはできないみたい
+		//したがって、列の数が判明した時点で、配列を要素に分解したような値をデータモデルの外に出して
+		//その値がならぶようにできないか？
+		//columnList の要素にデータモデルを設定
+		for(int i =0;i<columnList.size();i++) {
+			final int n = i;
+			//TableColumn 要素を取り出す
+			columnList.get(i).setCellValueFactory(new Callback<CellDataFeatures<CCorr, Double>, ObservableValue<Double>>() {
+			     public ObservableValue<Double> call(CellDataFeatures<CCorr, Double> p) {
+			         // p.getValue() returns the Person instance for a particular TableView row
+			         return p.getValue().getCorrValue(n);
+			     }
+			  });
+		}
+		corrMatrix.setItems(obCorr);
+		//columnList を corrMatrix に add
+		corrMatrix.getColumns().add(first);
+		for(TableColumn c: columnList) {
 			corrMatrix.getColumns().add(c);
 		}
-		//
+		
 
 	}// end of execAction()
 		//

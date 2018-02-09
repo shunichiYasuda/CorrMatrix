@@ -4,6 +4,7 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ObservableValue;
 
 /**
  * 
@@ -29,5 +30,9 @@ public class CCorr {
 	}
 	public DoubleProperty[] corrProperty() {
 		return this.corr;
+	}
+	//
+	public ObservableValue getCorrValue(int i) {
+		return this.corr[i];
 	}
 }
