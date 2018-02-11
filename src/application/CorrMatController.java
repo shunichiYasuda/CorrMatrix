@@ -313,6 +313,12 @@ public class CorrMatController {
 			y[i] = (double) colDataList.get(i);
 		}
 		r = corr(x, y);
+		//同時に平均や標準偏差があれば便利。
+		//フィールド名の表示をする。
+		String colFieldName = fieldNameArray[v]; //v はcolなので、col 
+		log.appendText("\n"+colFieldName+"average ="+ave(y)+"\tStd dev ="+stdDev(y));
+		String rowFieldName = fieldNameArray[h];
+		log.appendText("\n"+rowFieldName+"average ="+ave(x)+"\tStd dev ="+stdDev(x));
 
 		return r;
 	}// end of calcCorr()
