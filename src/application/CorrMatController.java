@@ -1,11 +1,15 @@
 package application;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +20,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
@@ -24,6 +29,7 @@ import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.FileChooser;
 import javafx.util.Callback;
@@ -31,6 +37,8 @@ import javafx.util.Callback;
 public class CorrMatController {
 	File dataFile;
 	String[] fieldNameArray;
+	String filePath;
+	boolean fileSetFlag = true;
 	// データのリストをつくる。フィールド分のCData インスタンスを保持する
 	List<CData> dataList = new ArrayList<CData>();
 	// 相関係数行列表示のために、行データ、相関係数1、相関係数2,...のクラスが必要
@@ -43,10 +51,6 @@ public class CorrMatController {
 	ListView<String> colFieldList;
 	@FXML
 	ListView<String> rowFieldList;
-	@FXML
-	CheckBox varConCheck1;
-	@FXML
-	CheckBox varConCheck2;
 	@FXML
 	TextField varConEliminate;
 	@FXML
@@ -63,6 +67,13 @@ public class CorrMatController {
 	private void openAction() {
 		FileChooser fc = new FileChooser();
 		dataFile = fc.showOpenDialog(log.getScene().getWindow());
+		if(dataFile==null) {
+			showAlert("データファイルを選択してください");
+			return;
+		}else {
+			fileSetFlag = false;
+			filePath = dataFile.getParent();
+		}
 		log.appendText("データファイルに" + dataFile.getAbsolutePath() + "がセットされました。");
 		//
 		String line = null;
@@ -121,6 +132,10 @@ public class CorrMatController {
 
 	@FXML
 	private void execAction() {
+		if(fileSetFlag) {
+			showAlert("データファイルをセットしてください");
+			return;
+		}
 		// 相関係数を計算するべきフィールド番号をいれておく
 		List<Integer> colPosList = new ArrayList<Integer>();
 		// 変数リストのクリア
@@ -217,11 +232,11 @@ public class CorrMatController {
 		first.setCellValueFactory(new PropertyValueFactory<CCorr,String>("varName"));
 		// 以降の列は選択した変数の数によって異なる
 		// 第1列以外をListにしてみる
-		List<TableColumn> columnList = new ArrayList<TableColumn>();
+		List<TableColumn<CCorr, Double>> columnList = new ArrayList<TableColumn<CCorr, Double>>();
 		for (Integer n : colPosList) {
 			int pos = (int) n;
 			String name = fieldNameArray[pos];
-			columnList.add(new TableColumn<CCorr, String>(name));
+			columnList.add(new TableColumn<CCorr, Double>(name));
 			//corrMatrix.getColumns().add(c);
 		}
 		//第2列以降はフィールド名が入った状態で、空。そこに値をセットするが、 PropertyValueFactoryは使えない
@@ -243,7 +258,7 @@ public class CorrMatController {
 		corrMatrix.setItems(obCorr);
 		//columnList を corrMatrix に add
 		corrMatrix.getColumns().add(first);
-		for(TableColumn c: columnList) {
+		for(TableColumn<CCorr,Double> c: columnList) {
 			corrMatrix.getColumns().add(c);
 		}
 		
@@ -257,8 +272,8 @@ public class CorrMatController {
 		// dataList を壊さないようにデータを外に取り出す。
 		String[] colOriginalDataStrArray = dataList.get(v).get();
 		String[] rowOriginalDataStrArray = dataList.get(h).get();
-		// 本当はTextField から除外番号を読み取るが、いまはここで与える
-		String[] eliminate = { "99", "9", "" };
+		// TextField から除外番号を読み取る
+		String[] eliminate = varConEliminate.getText().split(",");
 		// 冗長にはなるが、いったん排除文字を含めて、長さを合わせておく。
 		int arraySize = colOriginalDataStrArray.length;
 		if (rowOriginalDataStrArray.length < arraySize) {
@@ -378,6 +393,32 @@ public class CorrMatController {
 
 	@FXML
 	private void saveAction() {
-
+		//データ情報を書き出す
+		FileChooser fc = new FileChooser();
+		fc.setInitialDirectory(new File(filePath));
+		File saveFile = fc.showSaveDialog(log.getScene().getWindow());
+		String sysEncode = System.getProperty("file.encoding");
+		try {
+			PrintWriter ps = new PrintWriter(
+					new BufferedWriter(new OutputStreamWriter(new FileOutputStream(saveFile), sysEncode)));
+			
+			//ファイル情報
+			ps.println("ファイル名："+dataFile.getAbsolutePath());
+			//
+			ps.close();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	//アラート
+	private void showAlert(String str) {
+		Alert alert = new Alert(AlertType.WARNING);
+		alert.setTitle("ファイルを選択してください");
+		alert.getDialogPane().setContentText(str);
+		alert.showAndWait(); //表示
 	}
 }
