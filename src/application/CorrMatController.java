@@ -39,6 +39,9 @@ public class CorrMatController {
 	String[] fieldNameArray;
 	String filePath;
 	boolean fileSetFlag = true;
+	// 単一データを保持するリスト
+	List<CSingleData> rowSingleDataList = new ArrayList<CSingleData>();
+	List<CSingleData> colSingleDataList = new ArrayList<CSingleData>();
 	// データのリストをつくる。フィールド分のCData インスタンスを保持する
 	List<CData> dataList = new ArrayList<CData>();
 	// 相関係数行列表示のために、行データ、相関係数1、相関係数2,...のクラスが必要
@@ -67,10 +70,10 @@ public class CorrMatController {
 	private void openAction() {
 		FileChooser fc = new FileChooser();
 		dataFile = fc.showOpenDialog(log.getScene().getWindow());
-		if(dataFile==null) {
+		if (dataFile == null) {
 			showAlert("データファイルを選択してください");
 			return;
-		}else {
+		} else {
 			fileSetFlag = false;
 			filePath = dataFile.getParent();
 		}
@@ -132,7 +135,7 @@ public class CorrMatController {
 
 	@FXML
 	private void execAction() {
-		if(fileSetFlag) {
+		if (fileSetFlag) {
 			showAlert("データファイルをセットしてください");
 			return;
 		}
@@ -190,6 +193,15 @@ public class CorrMatController {
 			}
 			indexCol++;
 		}
+		// 同様に、相関係数を計算するだけじゃなくて、単一データの平均等もとっておきたい。
+		// 相関係数は片方の変数に排除文字があればどちらのデータとも「つめる」が、
+		// 単一データの平均などは片方だけでよい。すこしややこしいので別メソッド。
+		// 行データと列データをそれぞれ独立に。
+		for (Integer v : colPosList) {
+			colPos = v.intValue();
+			CSingleData single = new CSingleData(fieldNameArray[colPos]);
+			singleDataStat(single, colPos);
+		}
 		// check
 		for (int i = 0; i < corr.length; i++) {
 			log.appendText("\n");
@@ -201,8 +213,8 @@ public class CorrMatController {
 		// TableView に表示する TableColumnは変数の選択によって数が異なる。
 		// さらに初期値として変数名を各TableColumn の先頭にいれるし、最初の列は CCorr リストのvarNameが並ぶ
 		// TableColumn の数が実行時に変化するので、これをどうするかが問題。
-		//TableColumn が固定されていれば、データモデルのフィールドに合わせて CellFactory を使えばよいのだが
-		//ここではそうは行かない。
+		// TableColumn が固定されていれば、データモデルのフィールドに合わせて CellFactory を使えばよいのだが
+		// ここではそうは行かない。
 		// 列方向の変数の数は corr の列数なので、ここでカウントしておく
 		int vVarNum = corr[0].length;
 		// CCorr クラスリストを作成する
@@ -221,15 +233,15 @@ public class CorrMatController {
 		// corrList の中身
 		for (CCorr c : corrList) {
 			log.appendText("\n" + c.varNameProperty().toString() + ":");
-			for(DoubleProperty d:c.corrProperty()) {
-				log.appendText("\t"+d.doubleValue());
+			for (DoubleProperty d : c.corrProperty()) {
+				log.appendText("\t" + d.doubleValue());
 			}
 		}
-		//corrList をObservableList にしてみる
+		// corrList をObservableList にしてみる
 		ObservableList<CCorr> obCorr = FXCollections.observableList(corrList);
 		// 最初の列
 		TableColumn<CCorr, String> first = new TableColumn<CCorr, String>("var name");
-		first.setCellValueFactory(new PropertyValueFactory<CCorr,String>("varName"));
+		first.setCellValueFactory(new PropertyValueFactory<CCorr, String>("varName"));
 		// 以降の列は選択した変数の数によって異なる
 		// 第1列以外をListにしてみる
 		List<TableColumn<CCorr, Double>> columnList = new ArrayList<TableColumn<CCorr, Double>>();
@@ -237,34 +249,58 @@ public class CorrMatController {
 			int pos = (int) n;
 			String name = fieldNameArray[pos];
 			columnList.add(new TableColumn<CCorr, Double>(name));
-			//corrMatrix.getColumns().add(c);
+			// corrMatrix.getColumns().add(c);
 		}
-		//第2列以降はフィールド名が入った状態で、空。そこに値をセットするが、 PropertyValueFactoryは使えない
-		//そもそもTableView のcolumnにおけるcellの考え方自体が、「データモデルの一つの要素に対応する」となっているようなので、
-		//配列の値をそれぞれ別の列に表示することはできないみたい
-		//したがって、列の数が判明した時点で、配列を要素に分解したような値をデータモデルの外に出して
-		//その値がならぶようにできないか？
-		//columnList の要素にデータモデルを設定
-		for(int i =0;i<columnList.size();i++) {
+		// 第2列以降はフィールド名が入った状態で、空。そこに値をセットするが、 PropertyValueFactoryは使えない
+		// そもそもTableView のcolumnにおけるcellの考え方自体が、「データモデルの一つの要素に対応する」となっているようなので、
+		// 配列の値をそれぞれ別の列に表示することはできないみたい
+		// したがって、列の数が判明した時点で、配列を要素に分解したような値をデータモデルの外に出して
+		// その値がならぶようにできないか？
+		// columnList の要素にデータモデルを設定
+		for (int i = 0; i < columnList.size(); i++) {
 			final int n = i;
-			//TableColumn 要素を取り出す
-			columnList.get(i).setCellValueFactory(new Callback<CellDataFeatures<CCorr, Double>, ObservableValue<Double>>() {
-			     public ObservableValue<Double> call(CellDataFeatures<CCorr, Double> p) {
-			         // p.getValue() returns the Person instance for a particular TableView row
-			         return p.getValue().getCorrValue(n);
-			     }
-			  });
+			// TableColumn 要素を取り出す
+			columnList.get(i)
+					.setCellValueFactory(new Callback<CellDataFeatures<CCorr, Double>, ObservableValue<Double>>() {
+						public ObservableValue<Double> call(CellDataFeatures<CCorr, Double> p) {
+							// p.getValue() returns the Person instance for a particular TableView row
+							return p.getValue().getCorrValue(n);
+						}
+					});
 		}
 		corrMatrix.setItems(obCorr);
-		//columnList を corrMatrix に add
+		// columnList を corrMatrix に add
 		corrMatrix.getColumns().add(first);
-		for(TableColumn<CCorr,Double> c: columnList) {
+		for (TableColumn<CCorr, Double> c : columnList) {
 			corrMatrix.getColumns().add(c);
 		}
-		
 
 	}// end of execAction()
-		//
+
+	private void singleDataStat(CSingleData sd, int n) {
+		// dataList を壊さないようにデータを外に取り出す。
+		String[] originalDataStrArray = dataList.get(n).get();
+		// TextField から除外番号を読み取る
+		String[] eliminate = varConEliminate.getText().split(",");
+		List<Integer> dataList = new ArrayList<Integer>();
+		for(String s: originalDataStrArray) {
+			boolean checkFlag = true;
+			if (checkChar(s, eliminate))
+				checkFlag = false;
+			try {
+				int tmpData = Integer.parseInt(s);
+			} catch (NumberFormatException e) {
+				checkFlag = false;
+			}
+			//
+			if(checkFlag) {
+				sd.setData(Integer.parseInt(s));
+			}
+		}// end of for(String s: originalDataStrArray)
+		
+	}
+
+	//
 
 	// データクリーニング
 	private double calcCorr(int v, int h) {
@@ -274,6 +310,7 @@ public class CorrMatController {
 		String[] rowOriginalDataStrArray = dataList.get(h).get();
 		// TextField から除外番号を読み取る
 		String[] eliminate = varConEliminate.getText().split(",");
+		//
 		// 冗長にはなるが、いったん排除文字を含めて、長さを合わせておく。
 		int arraySize = colOriginalDataStrArray.length;
 		if (rowOriginalDataStrArray.length < arraySize) {
@@ -290,7 +327,6 @@ public class CorrMatController {
 		// 両方を頭からチェックしていき排除文字があったらつめるのだけれど
 		// どちらかにあれば、両方のその場所を詰めなければならないので配列で扱うには
 		// やっかいなので、Listを使う
-		// 家での修正がレポジトリにあがっていないので、branchをつくってみた
 		List<Integer> colDataList = new ArrayList<Integer>();
 		List<Integer> rowDataList = new ArrayList<Integer>();
 		for (int i = 0; i < arraySize; i++) {
@@ -328,12 +364,12 @@ public class CorrMatController {
 			y[i] = (double) colDataList.get(i);
 		}
 		r = corr(x, y);
-		//同時に平均や標準偏差があれば便利。
-		//フィールド名の表示をする。
-		String colFieldName = fieldNameArray[v]; //v はcolなので、col 
-		log.appendText("\n"+colFieldName+"average ="+ave(y)+"\tStd dev ="+stdDev(y));
+		// 同時に平均や標準偏差があれば便利。
+		// フィールド名の表示をする。
+		String colFieldName = fieldNameArray[v]; // v はcolなので、col
+		log.appendText("\n" + colFieldName + "average =" + ave(y) + "\tStd dev =" + stdDev(y));
 		String rowFieldName = fieldNameArray[h];
-		log.appendText("\n"+rowFieldName+"average ="+ave(x)+"\tStd dev ="+stdDev(x));
+		log.appendText("\n" + rowFieldName + "average =" + ave(x) + "\tStd dev =" + stdDev(x));
 
 		return r;
 	}// end of calcCorr()
@@ -393,7 +429,7 @@ public class CorrMatController {
 
 	@FXML
 	private void saveAction() {
-		//データ情報を書き出す
+		// データ情報を書き出す
 		FileChooser fc = new FileChooser();
 		fc.setInitialDirectory(new File(filePath));
 		File saveFile = fc.showSaveDialog(log.getScene().getWindow());
@@ -401,10 +437,14 @@ public class CorrMatController {
 		try {
 			PrintWriter ps = new PrintWriter(
 					new BufferedWriter(new OutputStreamWriter(new FileOutputStream(saveFile), sysEncode)));
-			
-			//ファイル情報
-			ps.println("ファイル名："+dataFile.getAbsolutePath());
-			//
+
+			// ファイル情報
+			ps.println("ファイル名：" + dataFile.getAbsolutePath());
+			// フィールドと平均等
+			for (int i = 0; i < rowFieldList.getItems().size(); i++) {
+				String s = rowFieldList.getItems().get(i);
+				System.out.println(s);
+			}
 			ps.close();
 		} catch (UnsupportedEncodingException e) {
 			// TODO Auto-generated catch block
@@ -414,11 +454,12 @@ public class CorrMatController {
 			e.printStackTrace();
 		}
 	}
-	//アラート
+
+	// アラート
 	private void showAlert(String str) {
 		Alert alert = new Alert(AlertType.WARNING);
 		alert.setTitle("ファイルを選択してください");
 		alert.getDialogPane().setContentText(str);
-		alert.showAndWait(); //表示
+		alert.showAndWait(); // 表示
 	}
 }
