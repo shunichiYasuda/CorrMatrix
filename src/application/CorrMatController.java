@@ -40,8 +40,8 @@ public class CorrMatController {
 	String filePath;
 	boolean fileSetFlag = true;
 	// 単一データを保持するリスト
-	List<CSingleData> rowSingleDataList = new ArrayList<CSingleData>();
-	List<CSingleData> colSingleDataList = new ArrayList<CSingleData>();
+	List<CSingleData> rowSingleDataList;
+	List<CSingleData> colSingleDataList;
 	// データのリストをつくる。フィールド分のCData インスタンスを保持する
 	List<CData> dataList = new ArrayList<CData>();
 	// 相関係数行列表示のために、行データ、相関係数1、相関係数2,...のクラスが必要
@@ -69,7 +69,7 @@ public class CorrMatController {
 	@FXML
 	private void openAction() {
 		FileChooser fc = new FileChooser();
-		dataFile = fc.showOpenDialog(log.getScene().getWindow());
+		dataFile = fc.showOpenDialog(log.getScene().getWindow()).getAbsoluteFile();
 		if (dataFile == null) {
 			showAlert("データファイルを選択してください");
 			return;
@@ -80,6 +80,13 @@ public class CorrMatController {
 		log.appendText("データファイルに" + dataFile.getAbsolutePath() + "がセットされました。");
 		//
 		String line = null;
+		//ファイルを変更したときのために combobox をクリア
+		for(ComboBox<String>c : colComboArray) {
+			c.getItems().clear();
+		}
+		for(ComboBox<String>r : rowComboArray) {
+			r.getItems().clear();
+		}
 		try {
 			BufferedReader br = new BufferedReader(
 					new InputStreamReader(new FileInputStream(dataFile), "JISAutoDetect"));
@@ -139,6 +146,9 @@ public class CorrMatController {
 			showAlert("データファイルをセットしてください");
 			return;
 		}
+		// CSingleDataList は実行ボタンをクリックするたびに作り直す
+		rowSingleDataList = new ArrayList<CSingleData>();
+		colSingleDataList = new ArrayList<CSingleData>();
 		// 相関係数を計算するべきフィールド番号をいれておく
 		List<Integer> colPosList = new ArrayList<Integer>();
 		// 変数リストのクリア
@@ -164,7 +174,7 @@ public class CorrMatController {
 			int pos = 0;
 			for (String s : fieldNameArray) {
 				if (s.equals((String) c.getValue())) {
-					log.appendText("\nrow[" + pos + "]:\t" + (String) c.getValue());
+					// log.appendText("\nrow[" + pos + "]:\t" + (String) c.getValue());
 					rowPosList.add(pos);
 					rowFieldList.getItems().add(s);
 				}
@@ -183,7 +193,7 @@ public class CorrMatController {
 			colPos = v.intValue();
 			for (Integer h : rowPosList) {
 				rowPos = h.intValue();
-				System.out.println("(" + rowPos + "," + colPos + ")");
+				// System.out.println("(" + rowPos + "," + colPos + ")");
 				// ペアになった番号から、そのフィールドのデータを読み込むのだが、どちらかのデータが空白であったり、
 				// 排除コードであったりした場合にデータを「つめる」必要がある。
 				// これはかなりやっかいなので別メソッドにする
@@ -201,7 +211,17 @@ public class CorrMatController {
 			colPos = v.intValue();
 			CSingleData single = new CSingleData(fieldNameArray[colPos]);
 			singleDataStat(single, colPos);
+			// CSingleData にデータが入ったのでリストに入れる
+			colSingleDataList.add(single);
 		}
+		for (Integer r : rowPosList) {
+			rowPos = r.intValue();
+			CSingleData single = new CSingleData(fieldNameArray[rowPos]);
+			singleDataStat(single, rowPos);
+			// CSingleData にデータが入ったのでリストに入れる
+			rowSingleDataList.add(single);
+		}
+
 		// check
 		for (int i = 0; i < corr.length; i++) {
 			log.appendText("\n");
@@ -232,9 +252,9 @@ public class CorrMatController {
 		}
 		// corrList の中身
 		for (CCorr c : corrList) {
-			log.appendText("\n" + c.varNameProperty().toString() + ":");
+			// log.appendText("\n" + c.varNameProperty().toString() + ":");
 			for (DoubleProperty d : c.corrProperty()) {
-				log.appendText("\t" + d.doubleValue());
+				// log.appendText("\t" + d.doubleValue());
 			}
 		}
 		// corrList をObservableList にしてみる
@@ -268,6 +288,7 @@ public class CorrMatController {
 						}
 					});
 		}
+		corrMatrix.getColumns().clear();
 		corrMatrix.setItems(obCorr);
 		// columnList を corrMatrix に add
 		corrMatrix.getColumns().add(first);
@@ -283,7 +304,7 @@ public class CorrMatController {
 		// TextField から除外番号を読み取る
 		String[] eliminate = varConEliminate.getText().split(",");
 		List<Integer> dataList = new ArrayList<Integer>();
-		for(String s: originalDataStrArray) {
+		for (String s : originalDataStrArray) {
 			boolean checkFlag = true;
 			if (checkChar(s, eliminate))
 				checkFlag = false;
@@ -293,12 +314,17 @@ public class CorrMatController {
 				checkFlag = false;
 			}
 			//
-			if(checkFlag) {
+			if (checkFlag) {
 				sd.setData(Integer.parseInt(s));
 			}
-		}// end of for(String s: originalDataStrArray)
-		
-	}
+		} // end of for(String s: originalDataStrArray)
+			// 除外番号を取り除いたデータが dataList にはいった。それをCSingleData に入れる
+		for (Integer data : dataList) {
+			sd.setData(data);
+		}
+		// これで sd にデータが入った。
+
+	} // end of singleDataStat()
 
 	//
 
@@ -439,11 +465,31 @@ public class CorrMatController {
 					new BufferedWriter(new OutputStreamWriter(new FileOutputStream(saveFile), sysEncode)));
 
 			// ファイル情報
-			ps.println("ファイル名：" + dataFile.getAbsolutePath());
+			ps.println("ファイル名：," + dataFile.getAbsolutePath());
 			// フィールドと平均等
-			for (int i = 0; i < rowFieldList.getItems().size(); i++) {
-				String s = rowFieldList.getItems().get(i);
-				System.out.println(s);
+			ps.println("変数名,サンプル数,平均値,分散,標準偏差");
+			for (CSingleData d : rowSingleDataList) {
+				ps.print(d.getDataName() + ",");
+				ps.print(d.getSize() + ",");
+				ps.print(d.getAve().toString() + ",");
+				ps.print(d.getDev().toString() + ",");
+				ps.println(d.getStdDev().toString());
+			}
+			for (CSingleData d : colSingleDataList) {
+				ps.print(d.getDataName() + ",");
+				ps.print(d.getSize() + ",");
+				ps.print(d.getAve().toString() + ",");
+				ps.print(d.getDev().toString() + ",");
+				ps.println(d.getStdDev().toString());
+			}
+			// corrList の中身 ToDo 下の corrList は空かも
+			for (CCorr c : corrList) {
+				System.out.println("in saveAction");
+				System.out.print("\n" + c.varNameProperty().toString() + ":");
+				for (DoubleProperty d : c.corrProperty()) {
+					System.out.print("\t" + d.doubleValue());
+				}
+				System.out.println("");
 			}
 			ps.close();
 		} catch (UnsupportedEncodingException e) {
