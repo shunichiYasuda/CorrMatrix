@@ -11,6 +11,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,11 +82,11 @@ public class CorrMatController {
 		log.appendText("データファイルに" + dataFile.getAbsolutePath() + "がセットされました。");
 		//
 		String line = null;
-		//ファイルを変更したときのために combobox をクリア
-		for(ComboBox<String>c : colComboArray) {
+		// ファイルを変更したときのために combobox をクリア
+		for (ComboBox<String> c : colComboArray) {
 			c.getItems().clear();
 		}
-		for(ComboBox<String>r : rowComboArray) {
+		for (ComboBox<String> r : rowComboArray) {
 			r.getItems().clear();
 		}
 		try {
@@ -159,7 +161,7 @@ public class CorrMatController {
 			int pos = 0;
 			for (String s : fieldNameArray) {
 				if (s.equals((String) c.getValue())) {
-					log.appendText("\ncol[" + pos + "]:\t" + (String) c.getValue());
+					//log.appendText("\ncol[" + pos + "]:\t" + (String) c.getValue());
 					colPosList.add(pos);
 					colFieldList.getItems().add(s);
 				}
@@ -223,12 +225,12 @@ public class CorrMatController {
 		}
 
 		// check
-		for (int i = 0; i < corr.length; i++) {
-			log.appendText("\n");
-			for (int j = 0; j < corr[0].length; j++) {
-				log.appendText("\tcorr[" + i + "][" + j + "] = " + corr[i][j]);
-			}
-		}
+//		for (int i = 0; i < corr.length; i++) {
+//			log.appendText("\n");
+//			for (int j = 0; j < corr[0].length; j++) {
+//				log.appendText("\tcorr[" + i + "][" + j + "] = " + corr[i][j]);
+//			}
+//		}
 		// 相関係数行列を TableView に表示するためにもう一工夫。
 		// TableView に表示する TableColumnは変数の選択によって数が異なる。
 		// さらに初期値として変数名を各TableColumn の先頭にいれるし、最初の列は CCorr リストのvarNameが並ぶ
@@ -241,7 +243,7 @@ public class CorrMatController {
 		// ここで分かっているのは行変数名、列変数名の番号なので、番号からフィールド名を引いてCCorr をセット
 		// 計算された相関計数行列 corr の列数分の配列を作っておく
 		double[] valueArray = new double[vVarNum];
-		List<CCorr> corrList = new ArrayList<CCorr>();
+		corrList = new ArrayList<CCorr>();
 		// 行変数名と corr 各行のデータ
 		int index = 0;
 		for (Integer n : rowPosList) {
@@ -251,12 +253,12 @@ public class CorrMatController {
 			index++;
 		}
 		// corrList の中身
-		for (CCorr c : corrList) {
-			// log.appendText("\n" + c.varNameProperty().toString() + ":");
-			for (DoubleProperty d : c.corrProperty()) {
-				// log.appendText("\t" + d.doubleValue());
-			}
-		}
+//		for (CCorr c : corrList) {
+//			System.out.print("\n" + c.varNameProperty().getValue() + ":");
+//			for (DoubleProperty d : c.corrProperty()) {
+//				System.out.print("\t" + d.doubleValue());
+//			}
+//		}
 		// corrList をObservableList にしてみる
 		ObservableList<CCorr> obCorr = FXCollections.observableList(corrList);
 		// 最初の列
@@ -375,11 +377,11 @@ public class CorrMatController {
 			}
 		} // end of for(int i=0 ...
 			//
-		System.out.println("after cleaninig....");
-		System.out.println("row size =" + rowDataList.size() + "\tcol size =" + rowDataList.size());
-		for (int i = 0; i < colDataList.size(); i++) {
-			System.out.println((int) rowDataList.get(i) + "," + (int) colDataList.get(i));
-		}
+//		System.out.println("after cleaninig....");
+//		System.out.println("row size =" + rowDataList.size() + "\tcol size =" + rowDataList.size());
+//		for (int i = 0; i < colDataList.size(); i++) {
+//			System.out.println((int) rowDataList.get(i) + "," + (int) colDataList.get(i));
+//		}
 		// 相関係数の計算
 		// なんにせよ、平均、分散、共分散のメソッドを使うので double配列の方がよい。
 		int dataNum = colDataList.size();
@@ -393,9 +395,9 @@ public class CorrMatController {
 		// 同時に平均や標準偏差があれば便利。
 		// フィールド名の表示をする。
 		String colFieldName = fieldNameArray[v]; // v はcolなので、col
-		log.appendText("\n" + colFieldName + "average =" + ave(y) + "\tStd dev =" + stdDev(y));
+		//log.appendText("\n" + colFieldName + "average =" + ave(y) + "\tStd dev =" + stdDev(y));
 		String rowFieldName = fieldNameArray[h];
-		log.appendText("\n" + rowFieldName + "average =" + ave(x) + "\tStd dev =" + stdDev(x));
+		//log.appendText("\n" + rowFieldName + "average =" + ave(x) + "\tStd dev =" + stdDev(x));
 
 		return r;
 	}// end of calcCorr()
@@ -455,6 +457,15 @@ public class CorrMatController {
 
 	@FXML
 	private void saveAction() {
+		// corrList の中身
+//		System.out.println("\nin saveAction()");
+//		for (CCorr c : corrList) {
+//			System.out.print("\n" + c.varNameProperty().getValue() + ":");
+//			for (DoubleProperty d : c.corrProperty()) {
+//				System.out.print("\t" + d.doubleValue());
+//			}
+//		}
+//		System.out.println("");
 		// データ情報を書き出す
 		FileChooser fc = new FileChooser();
 		fc.setInitialDirectory(new File(filePath));
@@ -482,14 +493,20 @@ public class CorrMatController {
 				ps.print(d.getDev().toString() + ",");
 				ps.println(d.getStdDev().toString());
 			}
-			// corrList の中身 ToDo 下の corrList は空かも
+			//行列表示
+			ps.print("変数名");
+			for(CSingleData d:colSingleDataList) {
+				ps.print(","+d.getDataName());
+			}
+			ps.println("");
+			//corrList の中身
 			for (CCorr c : corrList) {
-				System.out.println("in saveAction");
-				System.out.print("\n" + c.varNameProperty().toString() + ":");
+				ps.print(c.varNameProperty().getValue());
 				for (DoubleProperty d : c.corrProperty()) {
-					System.out.print("\t" + d.doubleValue());
+					BigDecimal b = new BigDecimal(d.doubleValue(),new MathContext(4));
+					ps.print("," + b.toString());
 				}
-				System.out.println("");
+				ps.println("");
 			}
 			ps.close();
 		} catch (UnsupportedEncodingException e) {
