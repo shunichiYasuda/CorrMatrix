@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToolBar?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import java.util.ArrayList?>
+
+<AnchorPane prefHeight="193.0" prefWidth="209.0"
+	xmlns="http://javafx.com/javafx/9.0.1" xmlns:fx="http://javafx.com/fxml/1"
+	fx:controller="application.CorrMatController">
+	<children>
+		<Pane layoutX="-9.0" layoutY="-9.0" prefHeight="480.0" prefWidth="640.0">
+			<children>
+				<ToolBar layoutX="9.0" layoutY="9.0" prefHeight="35.0"
+					prefWidth="631.0">
+					<items>
+						<Button mnemonicParsing="false" onAction="#openAction"
+							text="Open..." />
+						<Button mnemonicParsing="false" onAction="#execAction"
+							text="Excec..." />
+						<Button mnemonicParsing="false" onAction="#saveAction"
+							text="Save..." />
+						<Button mnemonicParsing="false" onAction="#quitAction"
+							text="Quit" />
+					</items>
+				</ToolBar>
+				<TabPane layoutX="9.0" layoutY="44.0" prefHeight="440.0"
+					prefWidth="631.0" tabClosingPolicy="UNAVAILABLE">
+					<tabs>
+						<Tab text="Variables Setting">
+							<content>
+								<AnchorPane minHeight="0.0" minWidth="0.0"
+									prefHeight="180.0" prefWidth="200.0">
+									<children>
+										<Label layoutX="14.0" layoutY="14.0" text="Row Variables...">
+											<font>
+												<Font size="14.0" />
+											</font>
+										</Label>
+										<HBox layoutX="33.0" layoutY="43.0" prefHeight="54.0"
+											prefWidth="503.0">
+											<children>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="rb0" prefWidth="150.0"
+															promptText="Select" />
+														<ComboBox fx:id="rb5" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="rb1" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="rb6" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="rb2" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="rb7" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="rb3" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="rb8" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="rb4" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="rb9" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<fx:define>
+													<ArrayList fx:id="rowComboArray">
+														<fx:reference source="rb0" />
+														<fx:reference source="rb1" />
+														<fx:reference source="rb2" />
+														<fx:reference source="rb3" />
+														<fx:reference source="rb4" />
+														<fx:reference source="rb5" />
+														<fx:reference source="rb6" />
+														<fx:reference source="rb7" />
+														<fx:reference source="rb8" />
+														<fx:reference source="rb9" />
+													</ArrayList>
+												</fx:define>
+											</children>
+										</HBox>
+										<Label layoutX="14.0" layoutY="120.0" text="Column Variables...">
+											<font>
+												<Font size="14.0" />
+											</font>
+										</Label>
+										<HBox layoutX="33.0" layoutY="152.0" prefHeight="54.0"
+											prefWidth="503.0">
+											<children>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="cb0" prefWidth="150.0"
+															promptText="Select ..." />
+														<ComboBox fx:id="cb5" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="cb1" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="cb6" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="cb2" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="cb7" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="cb3" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="cb8" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<VBox prefHeight="200.0" prefWidth="100.0">
+													<children>
+														<ComboBox fx:id="cb4" prefWidth="150.0"
+															promptText="Select..." />
+														<ComboBox fx:id="cb9" prefWidth="150.0"
+															promptText="Select..." />
+													</children>
+												</VBox>
+												<fx:define>
+													<ArrayList fx:id="colComboArray">
+														<fx:reference source="cb0" />
+														<fx:reference source="cb1" />
+														<fx:reference source="cb2" />
+														<fx:reference source="cb3" />
+														<fx:reference source="cb4" />
+														<fx:reference source="cb5" />
+														<fx:reference source="cb6" />
+														<fx:reference source="cb7" />
+														<fx:reference source="cb8" />
+														<fx:reference source="cb9" />
+													</ArrayList>
+												</fx:define>
+											</children>
+										</HBox>
+
+										<Label layoutX="14.0" layoutY="224.0" text="Value Controll...">
+											<font>
+												<Font size="14.0" />
+											</font>
+										</Label>
+										<HBox layoutX="11.0" layoutY="244.0" prefHeight="35.0"
+											prefWidth="520.0">
+											<children>
+												<Label text="次の値を排除">
+													<font>
+														<Font size="14.0" />
+													</font>
+												</Label>
+												<TextField fx:id="varConEliminate">
+													<font>
+														<Font size="14.0" />
+													</font>
+												</TextField>
+											</children>
+										</HBox>
+									</children>
+								</AnchorPane>
+							</content>
+						</Tab>
+						<Tab text="Variable Information">
+							<content>
+								<AnchorPane minHeight="0.0" minWidth="0.0"
+									prefHeight="180.0" prefWidth="200.0">
+									<children>
+										<HBox layoutX="73.0" layoutY="2.0" prefHeight="407.0"
+											prefWidth="485.0">
+											<children>
+												<VBox prefHeight="407.0" prefWidth="235.0">
+													<children>
+														<Label text="Row Variables">
+															<font>
+																<Font size="14.0" />
+															</font>
+														</Label>
+														<ListView fx:id="rowFieldList" prefHeight="384.0"
+															prefWidth="235.0" />
+													</children>
+												</VBox>
+												<VBox layoutX="10.0" layoutY="10.0" prefHeight="407.0"
+													prefWidth="235.0">
+													<children>
+														<Label text="Colmn Variables">
+															<font>
+																<Font size="14.0" />
+															</font>
+														</Label>
+														<ListView fx:id="colFieldList" prefHeight="384.0"
+															prefWidth="235.0" />
+													</children>
+												</VBox>
+											</children>
+										</HBox>
+									</children>
+								</AnchorPane>
+							</content>
+						</Tab>
+						<Tab text="Corr Matrix">
+							<content>
+								<AnchorPane minHeight="0.0" minWidth="0.0"
+									prefHeight="180.0" prefWidth="200.0">
+									<children>
+										<TableView fx:id="corrMatrix" prefHeight="406.0"
+											prefWidth="631.0">
+											<columns>
+												<!-- <TableColumn prefWidth="75.0" sortable="false" text="Col/Row" 
+													/> <TableColumn prefWidth="75.0" sortable="false" text="C2" /> <TableColumn 
+													prefWidth="75.0" sortable="false" text="C2" /> <TableColumn prefWidth="75.0" 
+													sortable="false" text="C2" /> <TableColumn prefWidth="75.0" sortable="false" 
+													text="C2" /> <TableColumn prefWidth="75.0" sortable="false" text="C2" /> 
+													<TableColumn prefWidth="75.0" sortable="false" text="C2" /> <TableColumn 
+													prefWidth="75.0" sortable="false" text="C2" /> -->
+											</columns>
+										</TableView>
+									</children>
+								</AnchorPane>
+							</content>
+						</Tab>
+						<Tab text="log">
+							<content>
+								<AnchorPane minHeight="0.0" minWidth="0.0"
+									prefHeight="180.0" prefWidth="200.0">
+									<children>
+										<TextArea fx:id="log" prefHeight="410.0" prefWidth="631.0" />
+									</children>
+								</AnchorPane>
+							</content>
+						</Tab>
+					</tabs>
+				</TabPane>
+			</children>
+		</Pane>
+	</children>
+</AnchorPane>
